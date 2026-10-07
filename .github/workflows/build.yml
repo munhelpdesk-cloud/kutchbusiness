@@ -1,4 +1,4 @@
-name: Build APK
+name: Build release APK
 on:
   push:
   workflow_dispatch:
@@ -14,12 +14,29 @@ jobs:
           java-version: 17
       - name: Accept Android licenses
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      - name: Prepare signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/kutch.jks"
+            echo "KS_PASS=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "KS_ALIAS=kutch" >> "$GITHUB_ENV"
+          else
+            echo "No secrets found - using a temporary key (updates will not install over older builds)"
+            keytool -genkeypair -keystore "$RUNNER_TEMP/kutch.jks" -alias kutch -keyalg RSA -keysize 2048 \
+              -validity 36500 -storepass temp12345 -keypass temp12345 -dname "CN=Kutch Business"
+            echo "KS_PASS=temp12345" >> "$GITHUB_ENV"
+            echo "KS_ALIAS=kutch" >> "$GITHUB_ENV"
+          fi
+          echo "KS_FILE=$RUNNER_TEMP/kutch.jks" >> "$GITHUB_ENV"
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
-      - name: Build debug APK
-        run: gradle assembleDebug --no-daemon
+      - name: Build release APK
+        run: gradle assembleRelease --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: KutchBusiness-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: KutchBusiness-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
