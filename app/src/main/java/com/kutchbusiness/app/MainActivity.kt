@@ -10,6 +10,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.view.Menu
 import android.view.MenuItem
@@ -22,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import java.io.File
 
@@ -53,6 +56,7 @@ class MainActivity : AppCompatActivity() {
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var pendingParams: WebChromeClient.FileChooserParams? = null
     private var cameraUri: Uri? = null
+    private var ready = false
 
     private val notifPermLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -97,7 +101,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+        splash.setKeepOnScreenCondition { !ready }
+        // Never keep the splash longer than 4 seconds, even on a slow network
+        Handler(Looper.getMainLooper()).postDelayed({ ready = true }, 4000)
         setContentView(R.layout.activity_main)
         webView = findViewById(R.id.webview)
         swipe = findViewById(R.id.swipe)
@@ -194,10 +202,12 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView, url: String) {
                 progress.visibility = View.GONE
                 swipe.isRefreshing = false
+                ready = true
                 if (isOurHost(Uri.parse(url).host)) view.evaluateJavascript(NOTIFICATION_POLYFILL, null)
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                ready = true
                 if (request.isForMainFrame) view.loadUrl(OFFLINE_URL)
             }
         }

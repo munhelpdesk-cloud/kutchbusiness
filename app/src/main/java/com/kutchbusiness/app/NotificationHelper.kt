@@ -61,7 +61,7 @@ object NotificationHelper {
         )
 
         val b = NotificationCompat.Builder(c, ensureChannel(c))
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.ic_stat_logo)
             .setContentTitle(title.ifBlank { c.getString(R.string.app_name) })
             .setContentText(body)
             .setColor(COLORS[p.colorIndex.coerceIn(COLORS.indices)].second)
