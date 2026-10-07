@@ -5,13 +5,13 @@ plugins {
 
 android {
     namespace = "com.kutchbusiness.app"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.kutchbusiness.app"
         minSdk = 29
-        targetSdk = 34
-        versionCode = 1
+        targetSdk = 36
+        versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
         versionName = "1.0"
     }
     signingConfigs {

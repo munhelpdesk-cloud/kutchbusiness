@@ -25,6 +25,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import java.io.File
 
@@ -107,6 +109,14 @@ class MainActivity : AppCompatActivity() {
         // Never keep the splash longer than 4 seconds, even on a slow network
         Handler(Looper.getMainLooper()).postDelayed({ ready = true }, 4000)
         setContentView(R.layout.activity_main)
+        // Android 15+ draws apps edge-to-edge; keep the website clear of the status/navigation bars and keyboard
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { v, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime()
+            )
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
         webView = findViewById(R.id.webview)
         swipe = findViewById(R.id.swipe)
         progress = findViewById(R.id.progress)

@@ -12,6 +12,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity() {
@@ -84,7 +86,13 @@ class SettingsActivity : AppCompatActivity() {
             }
         })
 
-        setContentView(ScrollView(this).apply { addView(root) })
+        val scroll = ScrollView(this).apply { addView(root) }
+        ViewCompat.setOnApplyWindowInsetsListener(scroll) { v, insets ->
+            val b = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(b.left, 0, b.right, b.bottom)
+            insets
+        }
+        setContentView(scroll)
     }
 
     override fun onSupportNavigateUp(): Boolean { finish(); return true }
